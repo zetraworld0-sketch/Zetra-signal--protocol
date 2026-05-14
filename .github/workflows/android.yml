@@ -1,45 +1,35 @@
-name: Android CI
+name: Build Netscape APK
 
 on:
-  pull_request:
   push:
     branches:
-    - 'main'
-    - '7.**'
-
-permissions:
-  contents: read # to fetch code (actions/checkout)
+      - main
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest-8-cores
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      # gh api repos/actions/checkout/commits/v6 --jq '.sha'
-      with:
-          submodules: true
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: set up JDK 17
-      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
-      # gh api repos/actions/setup-java/commits/v5 --jq '.sha'
-      with:
-        distribution: temurin
-        java-version: 17
-        cache: gradle
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
 
-    - name: Validate Gradle Wrapper
-      uses: gradle/actions/wrapper-validation@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6
-      # gh api repos/gradle/actions/commits/v6 --jq '.sha'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-    - name: Build with Gradle
-      run: ./gradlew qa
+      - name: Grant Permission
+        run: chmod +x gradlew
 
-    - name: Archive reports for failed build
-      if: ${{ failure() }}
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-      # gh api repos/actions/upload-artifact/commits/v7 --jq '.sha'
-      with:
-        name: reports
-        path: '*/build/reports'
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: netscape-debug-apk
+          path: app/build/outputs/apk/**/*.apk
