@@ -10,21 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Memory allocation for the JVM and Kotlin daemon
+      # Institutional-grade memory allocation
       GRADLE_OPTS: "-Xmx4g -Dkotlin.daemon.jvm.options=-Xmx2g"
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          submodules: true # Essential if your fork relies on Signal's sub-libraries
+          submodules: true
 
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
-          cache: 'gradle' # This will speed up future runs significantly
+          cache: 'gradle'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -33,9 +33,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build APK
-        # -x lint -x test: Skips hours of background checks to stop the 1-hour hang
-        # --no-daemon: Prevents memory leaks that cause the "stuck" state
-        # workers.max=2: Prevents the Exit 143 (Red Mark) memory crash
+        # -x lint -x test: Directly removes the 1-hour "hang" by skipping tests
+        # --no-daemon: Ensures memory is cleared so the runner doesn't freeze
+        # workers.max=2: Prevents the 12-minute "Red Mark" crash (Exit 143)
         run: ./gradlew :Signal-Android:assemblePlayProdDebug -x lint -x test --no-daemon --stacktrace -Dorg.gradle.workers.max=2
 
       - name: Upload APK
